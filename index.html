@@ -5,35 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TSD Distance Player – km/jam → km/detik (60:100)</title>
   <style>
-    html,body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;margin:0;background:#0b0b0c;color:#eaeaea}
-    .wrap{max-width:880px;margin:24px auto;padding:16px}
-    h1{font-size:20px;margin:0 0 12px}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-    .card{background:#141416;border:1px solid #2a2b2f;border-radius:14px;padding:16px;margin-bottom:14px}
-    label{display:block;font-size:13px;margin-bottom:6px;color:#c9c9cf}
-    input[type="number"],input[type="text"]{width:100%;padding:10px 12px;border:1px solid #2a2b2f;border-radius:10px;background:#101114;color:#fff;font-size:16px;outline:none}
-    .btn{appearance:none;border:1px solid #2a2b2f;background:#1a1b1f;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;cursor:pointer}
-    .btn.primary{background:#3358ff}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
+    :root{
+      --bg:#0f1014;
+      --surface:#181a20;
+      --surface-2:#111318;
+      --line:#30333c;
+      --line-soft:#242730;
+      --text:#f4f6fb;
+      --muted:#aeb6c4;
+      --accent:#2f7df6;
+      --accent-2:#1eb980;
+      --warn:#ffd166;
+    }
+    *{box-sizing:border-box}
+    html,body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+    body{min-height:100vh}
+    .wrap{max-width:1080px;margin:0 auto;padding:24px 16px 32px}
+    h1{font-size:22px;line-height:1.25;margin:0 0 14px}
+    h2{font-size:16px;line-height:1.25;margin:0}
+    .grid,.sub-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px}
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    input[type="number"],input[type="text"]{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:#fff;font-size:16px;outline:none}
+    input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,125,246,.18)}
+    .btn{appearance:none;border:1px solid var(--line);background:#20232b;color:#fff;min-height:42px;padding:10px 14px;border-radius:8px;font-size:14px;cursor:pointer}
+    .btn.primary{background:var(--accent);border-color:var(--accent)}
+    .btn:disabled{opacity:.56;cursor:not-allowed}
     .row{display:flex;gap:10px;flex-wrap:wrap}
-    .stat{display:grid;grid-template-columns:1fr auto;gap:6px;padding:8px 0;border-bottom:1px dashed #2a2b2f}
-    .stat:last-child{border-bottom:none}
-    .key{color:#c9c9cf}
-    .val{font-variant-numeric:tabular-nums}
-    .muted{color:#9aa0a6;font-size:12px}
+    .muted{color:var(--muted);font-size:12px;line-height:1.45}
     .switch{display:flex;align-items:center;gap:8px;margin-top:8px}
     .switch input{width:18px;height:18px}
-    .pill{display:inline-block;padding:2px 8px;border:1px solid #2a2b2f;border-radius:999px;background:#121318;color:#c9c9cf;font-size:12px}
-    .warn{color:#ffd166}
+    .pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:12px}
+    .warn{color:var(--warn)}
     .ok{color:#7ad47a}
-    .sub-section{margin-bottom: 24px;}
-    .sub-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+
+    .live-card{border-color:#3b4150}
+    .live-card[data-state="running"]{border-color:rgba(30,185,128,.8);box-shadow:0 0 0 1px rgba(30,185,128,.18)}
+    .live-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+    .eyebrow{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+    .status-badge{min-width:84px;text-align:center;border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--muted);font-size:13px;font-weight:700}
+    .live-card[data-state="running"] .status-badge{background:rgba(30,185,128,.14);border-color:rgba(30,185,128,.6);color:#8ff0c7}
+    .live-card[data-state="paused"] .status-badge{background:rgba(255,209,102,.14);border-color:rgba(255,209,102,.62);color:var(--warn)}
+    .live-card[data-state="done"] .status-badge{background:rgba(47,125,246,.16);border-color:rgba(47,125,246,.62);color:#9fc3ff}
+    .live-main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.9fr);gap:18px;align-items:end;padding:18px 0 10px}
+    .metric-label,.tile-label{display:block;color:var(--muted);font-size:13px;margin-bottom:5px}
+    .metric-value{font-size:clamp(42px,8vw,76px);line-height:.95;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
+    .metric-note{color:var(--muted);font-size:12px;margin-top:8px}
+    .side-metrics{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+    .metric-tile{border-top:1px solid var(--line-soft);padding:12px 0}
+    .metric-tile strong{display:block;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .progress-track{height:12px;border-radius:999px;background:#0b0d11;overflow:hidden;border:1px solid var(--line-soft);margin-top:4px}
+    .progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent-2),var(--accent));transition:width .25s ease}
+    .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 18px;border-top:1px solid var(--line-soft);margin-top:16px;padding-top:8px}
+    .stat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line-soft)}
+    .stat:nth-last-child(-n+3){border-bottom:none}
+    .key{color:var(--muted);font-size:13px}
+    .val{font-variant-numeric:tabular-nums;font-weight:700;text-align:right;white-space:nowrap}
+
+    .sub-section{margin-bottom:24px}
     .sub-header{font-size:15px;margin:0 0 8px}
-    .sub-result{margin-top:12px;padding:10px 14px;background:#121318;border-radius:8px;border:1px solid #23232a}
-    .formula{font-size:12px;color:#9aa0a6;margin-top:4px}
-    .sub-warn{color:#ffd166;font-size:13px}
+    .sub-result{margin-top:12px;padding:10px 14px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line-soft);line-height:1.5}
+    .formula{font-size:12px;color:var(--muted);margin-top:4px}
+    .sub-warn{color:var(--warn);font-size:13px}
     .sub-ok{color:#7ad47a;font-size:13px}
-    .sub-label{font-size:13px;margin-bottom:6px;color:#bdbdc7}
+    .sub-label{font-size:13px;margin-bottom:6px;color:var(--muted)}
+
+    @media (max-width:760px){
+      .wrap{padding:14px 10px 24px}
+      .grid>div,.sub-grid>div{grid-column:1 / -1 !important}
+      .live-header{align-items:center}
+      .live-main{grid-template-columns:1fr;gap:8px}
+      .side-metrics,.detail-grid{grid-template-columns:1fr 1fr}
+      .stat:nth-last-child(-n+3){border-bottom:1px dashed var(--line-soft)}
+      .stat:nth-last-child(-n+2){border-bottom:none}
+      .metric-value{font-size:48px}
+      .metric-tile strong{font-size:23px}
+    }
+    @media (max-width:480px){
+      h1{font-size:19px}
+      .card{padding:14px}
+      .side-metrics,.detail-grid{grid-template-columns:1fr}
+      .stat,.stat:nth-last-child(-n+2){border-bottom:1px dashed var(--line-soft)}
+      .stat:last-child{border-bottom:none}
+      .metric-value{font-size:40px}
+      .row .btn{flex:1 1 120px}
+    }
   </style>
 </head>
 <body>
@@ -96,23 +152,60 @@
       <div id="msg" class="muted" style="margin-top:8px">Isi salah satu: (1) jarak & waktu, atau (2) kecepatan. Tekan <b>Enter</b> untuk mulai.</div>
     </div>
 
-    <div class="card">
-      <div class="stat"><div class="key">Mulai (jam nyata)</div><div class="val" id="clockStart">—</div></div>
-      <div class="stat"><div class="key">ETA Selesai (jam nyata)</div><div class="val" id="clockETA">—</div></div>
-      <div class="stat"><div class="key">Detik real</div><div class="val" id="tReal">0.0 s</div></div>
-      <div class="stat"><div class="key">Detik rally (60→100)</div><div class="val" id="tRally">0.0 s</div></div>
-      <div class="stat"><div class="key">Jarak berjalan</div><div class="val" id="sKm">0.000 km</div></div>
-      <div class="stat"><div class="key">Sisa jarak</div><div class="val" id="sisaKm">0.000 km</div></div>
-      <div class="stat"><div class="key">Progress</div><div class="val" id="progress">0.0%</div></div>
-      <div class="stat"><div class="key">v (km/detik)</div><div class="val" id="vKms">0.000000</div></div>
-      <div class="stat"><div class="key">v (m/detik)</div><div class="val" id="vMs">0.00</div></div>
-      <div class="stat"><div class="key">v (km/jam)</div><div class="val" id="vKmh">0.00</div></div>
+    <div class="card live-card" id="liveCard" data-state="idle">
+      <div class="live-header">
+        <div>
+          <div class="eyebrow">Monitor berjalan</div>
+          <h2>Kecepatan tetap per detik</h2>
+        </div>
+        <div class="status-badge" id="runStatus">Siap</div>
+      </div>
+
+      <div class="live-main" aria-live="polite">
+        <div class="primary-metric">
+          <span class="metric-label">Jarak berjalan</span>
+          <div class="metric-value" id="sKm">0.000 km</div>
+          <div class="metric-note">s = v x detik rally</div>
+        </div>
+
+        <div class="side-metrics">
+          <div class="metric-tile">
+            <span class="tile-label">Detik real</span>
+            <strong id="tReal">0.0 s</strong>
+          </div>
+          <div class="metric-tile">
+            <span class="tile-label">Detik rally</span>
+            <strong id="tRally">0.0 s</strong>
+          </div>
+          <div class="metric-tile">
+            <span class="tile-label">Sisa jarak</span>
+            <strong id="sisaKm">0.000 km</strong>
+          </div>
+          <div class="metric-tile">
+            <span class="tile-label">Progress</span>
+            <strong id="progress">0.0%</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-track" aria-hidden="true">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="stat"><div class="key">Mulai (jam nyata)</div><div class="val" id="clockStart">—</div></div>
+        <div class="stat"><div class="key">ETA selesai</div><div class="val" id="clockETA">—</div></div>
+        <div class="stat"><div class="key">v (km/detik)</div><div class="val" id="vKms">0.000000</div></div>
+        <div class="stat"><div class="key">v (m/detik)</div><div class="val" id="vMs">0.00</div></div>
+        <div class="stat"><div class="key">v (km/jam)</div><div class="val" id="vKmh">0.00</div></div>
+        <div class="stat"><div class="key">Skala aktif</div><div class="val" id="scaleState">60 : 100</div></div>
+      </div>
     </div>
 
     <div class="muted">Rumus utama: s = v × t<sub>rally</sub>. v (km/s) berasal dari input km/jam ÷ 3600 atau dihitung dari jarak / waktu (menit×60). t<sub>rally</sub> = t<sub>real</sub> × (100/60) jika skala aktif.</div>
   </div>
 
-  <script src="sub-calc.js"></script>
+  <script src="calc.js"></script>
   <script>
     const $ = id => document.getElementById(id);
 
@@ -127,6 +220,10 @@
     const resetBtn = $('reset');
     const msgEl    = $('msg');
 
+    const liveCardEl = $('liveCard');
+    const runStatusEl = $('runStatus');
+    const progressFillEl = $('progressFill');
+
     const clockStartEl = $('clockStart');
     const clockETAEl   = $('clockETA');
 
@@ -138,6 +235,7 @@
     const vKmsEl   = $('vKms');
     const vMsEl    = $('vMs');
     const vKmhEl   = $('vKmh');
+    const scaleStateEl = $('scaleState');
 
     const SCALE = 100/60; // 1.666...
 
@@ -154,10 +252,39 @@
     function realSeconds(){ if(!started) return 0; return Math.max(0,(now()-t0-accPause)/1000); }
     function rallySeconds(){ const t=realSeconds(); return t*(scaleChk.checked?SCALE:1); }
 
+    function setRunState(state){
+      const labels = { idle:'Siap', running:'Berjalan', paused:'Jeda', done:'Selesai' };
+      liveCardEl.dataset.state = state;
+      runStatusEl.textContent = labels[state] || labels.idle;
+      startBtn.disabled = state === 'running';
+      pauseBtn.disabled = state === 'idle' || state === 'paused' || state === 'done';
+      startBtn.textContent = state === 'paused' ? 'Lanjutkan' : (state === 'done' ? 'Mulai lagi' : 'Mulai');
+    }
+
+    function updateProgressBar(progress){
+      const safeProgress = Math.max(0, Math.min(100, progress || 0));
+      progressFillEl.style.width = fmt(safeProgress,1) + '%';
+    }
+
+    function updateScaleState(){
+      scaleStateEl.textContent = scaleChk.checked ? '60 : 100' : '1 : 1';
+    }
+
     function updateVelocityDisplays(){
       vKmsEl.textContent = fmt(v_km_s,6);
       vMsEl.textContent  = fmt(v_km_s*1000,2);
       vKmhEl.textContent = fmt(v_km_h,2);
+    }
+
+    function updateClockEstimate(startReal){
+      clockStartEl.textContent = wallTime(startReal);
+      if(targetRallySec!=null){
+        const realSecToFinish = targetRallySec / (scaleChk.checked?SCALE:1);
+        const eta = startReal + realSecToFinish*1000;
+        clockETAEl.textContent = wallTime(eta);
+      } else {
+        clockETAEl.textContent = '—';
+      }
     }
 
     function resolveInputsToSpeed(){
@@ -181,17 +308,7 @@
       v_km_s = vkms;
 
       updateVelocityDisplays();
-
-      // Hitung ETA selesai real-clock bila targetRallySec tersedia
-      const startReal = Date.now();
-      clockStartEl.textContent = wallTime(startReal);
-      if(targetRallySec!=null){
-        const realSecToFinish = targetRallySec / (scaleChk.checked?SCALE:1);
-        const eta = startReal + realSecToFinish*1000;
-        clockETAEl.textContent = wallTime(eta);
-      } else {
-        clockETAEl.textContent = '—';
-      }
+      updateScaleState();
 
       // Pesan konsistensi jika v dari D/T dan input v berbeda
       if(useVkmh && useDT){
@@ -229,41 +346,56 @@
       const sisa = Math.max(0,(targetDistKm>0? targetDistKm - s : 0));
       sisaKmEl.textContent = fmt(sisa,3)+' km';
       const progress = (targetDistKm>0? (s/targetDistKm*100) : (targetRallySec? ty/targetRallySec*100 : 0));
-      progEl.textContent = fmt(Math.min(100,progress),1)+'%';
+      const safeProgress = Math.min(100, Math.max(0, progress));
+      progEl.textContent = fmt(safeProgress,1)+'%';
+      updateProgressBar(safeProgress);
 
-      if(finished){ clearInterval(timer); }
+      if(finished){
+        clearInterval(timer);
+        started=false;
+        paused=false;
+        setRunState('done');
+        msgEl.textContent = 'Selesai. Tekan Mulai lagi atau Reset.';
+      }
     }
 
     function start(){
       if(started && paused){
-        paused=false; accPause += (now()-tPauseStart); loop(); return;
+        paused=false; accPause += (now()-tPauseStart); setRunState('running'); loop(); return;
       }
       if(started) return;
       try{ resolveInputsToSpeed(); } catch(e){ alert(e.message); return; }
-      started=true; paused=false; accPause=0; t0=now();
+      started=true; paused=false; accPause=0; t0=now(); updateClockEstimate(Date.now()); setRunState('running');
       loop();
     }
 
     function loop(){ clearInterval(timer); timer=setInterval(tick,1000); tick(); }
-    function pause(){ if(!started||paused) return; paused=true; tPauseStart=now(); clearInterval(timer); tick(); }
+    function pause(){ if(!started||paused) return; paused=true; tPauseStart=now(); clearInterval(timer); tick(); setRunState('paused'); msgEl.textContent='Dijeda. Tekan Lanjutkan untuk meneruskan.'; }
     function reset(){ started=false; paused=false; v_km_s=0; v_km_h=0; targetDistKm=0; targetRallySec=null; t0=0; accPause=0; tPauseStart=0; clearInterval(timer);
       tRealEl.textContent='0.0 s'; tRallyEl.textContent='0.0 s'; sKmEl.textContent='0.000 km'; sisaKmEl.textContent='0.000 km'; progEl.textContent='0.0%';
-      vKmsEl.textContent='0.000000'; vMsEl.textContent='0.00'; vKmhEl.textContent='0.00'; clockStartEl.textContent='—'; clockETAEl.textContent='—'; msgEl.textContent='Isi salah satu: (1) jarak & waktu, atau (2) kecepatan. Tekan Enter untuk mulai.'; }
+      vKmsEl.textContent='0.000000'; vMsEl.textContent='0.00'; vKmhEl.textContent='0.00'; clockStartEl.textContent='—'; clockETAEl.textContent='—'; msgEl.textContent='Isi salah satu: (1) jarak & waktu, atau (2) kecepatan. Tekan Enter untuk mulai.'; updateProgressBar(0); updateScaleState(); setRunState('idle'); }
 
     // Wiring
     lockBtn.addEventListener('click', ()=>{
-      try{ resolveInputsToSpeed(); } catch(e){ alert(e.message); }
+      try{ resolveInputsToSpeed(); clockStartEl.textContent='—'; clockETAEl.textContent='—'; updateProgressBar(0); setRunState('idle'); } catch(e){ alert(e.message); }
     });
     startBtn.addEventListener('click', start);
     pauseBtn.addEventListener('click', pause);
     resetBtn.addEventListener('click', reset);
+    scaleChk.addEventListener('change', ()=>{
+      updateScaleState();
+      if(started) updateClockEstimate(Date.now() - realSeconds()*1000);
+    });
 
     ;[distInput,timeMinInput,speedKmhInp].forEach(inp=>{
       inp.addEventListener('keydown', e=>{ if(e.key==='Enter') start(); });
     });
 
+    updateScaleState();
+    setRunState('idle');
+
     // Sub trayek calculator
-    // sub-calc.js will wire itself on load
+    // calc.js wires itself on load
   </script>
 </body>
 </html>
