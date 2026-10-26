@@ -1,0 +1,16 @@
+name: Master Clock Contract
+on:
+  pull_request:
+  push:
+    branches:
+      - feat/indorallyhub-inspired-master-clock-v1
+jobs:
+  master-clock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Master Clock contract
+        run: node --test tests/master-clock.test.mjs
