@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TSD Distance Player – km/jam → km/detik (60:100)</title>
+  <meta name="navipro-master-clock-endpoint" content="" />
+  <title>TSD Cadencer — Master Clock WITA</title>
   <style>
     :root{
       --bg:#0f1014;
@@ -94,7 +95,16 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>TSD Distance Player – km/jam → km/detik (60:100)</h1>
+    <h1>TSD Cadencer — Waktu Tetap Detik</h1>
+    <div class="card" role="region" aria-label="NaviPRO Master Clock">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div><strong>Master Clock</strong><div class="muted">Asia/Makassar · WITA · sumber NaviPRO</div></div>
+        <div style="text-align:right">
+          <div id="masterClockDisplay" style="font-size:clamp(24px,5vw,42px);font-weight:800;font-variant-numeric:tabular-nums">--:--:--.--</div>
+          <div id="masterClockQuality" class="warn">UNSYNCED · tidak boleh dijadikan waktu resmi</div>
+        </div>
+      </div>
+    </div>
 
     <!-- Sub Trayek Section -->
     <div class="card sub-section">
@@ -138,10 +148,6 @@
           <label for="speedKmh">Kecepatan (km/jam) — opsional jika isi jarak & waktu</label>
           <input id="speedKmh" type="number" min="0" step="0.01" placeholder="mis. 36.00" />
         </div>
-      </div>
-      <div class="switch">
-        <input id="scale" type="checkbox" checked />
-        <label for="scale" style="margin:0">Skala waktu <span class="pill">60 : 100</span> aktif</label>
       </div>
       <div class="row" style="margin-top:10px">
         <button id="lockFromDT" class="btn">Hitung v dari Jarak/Waktu</button>
@@ -198,11 +204,11 @@
         <div class="stat"><div class="key">v (km/detik)</div><div class="val" id="vKms">0.000000</div></div>
         <div class="stat"><div class="key">v (m/detik)</div><div class="val" id="vMs">0.00</div></div>
         <div class="stat"><div class="key">v (km/jam)</div><div class="val" id="vKmh">0.00</div></div>
-        <div class="stat"><div class="key">Skala aktif</div><div class="val" id="scaleState">60 : 100</div></div>
+        <div class="stat"><div class="key">Skala waktu</div><div class="val" id="scaleState">1 : 1</div></div>
       </div>
     </div>
 
-    <div class="muted">Rumus utama: s = v × t<sub>rally</sub>. v (km/s) berasal dari input km/jam ÷ 3600 atau dihitung dari jarak / waktu (menit×60). t<sub>rally</sub> = t<sub>real</sub> × (100/60) jika skala aktif.</div>
+    <div class="muted">Rumus utama: s = v × t<sub>rally</sub>. v (km/s) berasal dari input km/jam ÷ 3600 atau dihitung dari jarak / waktu (menit×60). t<sub>rally</sub> = t<sub>real</sub> (1 detik = 1 detik).</div>
   </div>
 
   <script src="calc.js"></script>
@@ -212,7 +218,6 @@
     const distInput   = $('dist');
     const timeMinInput= $('timeMin');
     const speedKmhInp = $('speedKmh');
-    const scaleChk    = $('scale');
 
     const lockBtn  = $('lockFromDT');
     const startBtn = $('start');
@@ -237,7 +242,6 @@
     const vKmhEl   = $('vKmh');
     const scaleStateEl = $('scaleState');
 
-    const SCALE = 100/60; // 1.666...
 
     let started=false, paused=false;
     let t0=0, accPause=0, tPauseStart=0;
@@ -250,7 +254,7 @@
     function wallTime(d){ return new Date(d).toLocaleTimeString([], {hour12:false}); }
 
     function realSeconds(){ if(!started) return 0; return Math.max(0,(now()-t0-accPause)/1000); }
-    function rallySeconds(){ const t=realSeconds(); return t*(scaleChk.checked?SCALE:1); }
+    function rallySeconds(){ return realSeconds(); }
 
     function setRunState(state){
       const labels = { idle:'Siap', running:'Berjalan', paused:'Jeda', done:'Selesai' };
@@ -267,7 +271,7 @@
     }
 
     function updateScaleState(){
-      scaleStateEl.textContent = scaleChk.checked ? '60 : 100' : '1 : 1';
+      scaleStateEl.textContent = '1 : 1';
     }
 
     function updateVelocityDisplays(){
@@ -279,7 +283,7 @@
     function updateClockEstimate(startReal){
       clockStartEl.textContent = wallTime(startReal);
       if(targetRallySec!=null){
-        const realSecToFinish = targetRallySec / (scaleChk.checked?SCALE:1);
+        const realSecToFinish = targetRallySec;
         const eta = startReal + realSecToFinish*1000;
         clockETAEl.textContent = wallTime(eta);
       } else {
@@ -382,10 +386,6 @@
     startBtn.addEventListener('click', start);
     pauseBtn.addEventListener('click', pause);
     resetBtn.addEventListener('click', reset);
-    scaleChk.addEventListener('change', ()=>{
-      updateScaleState();
-      if(started) updateClockEstimate(Date.now() - realSeconds()*1000);
-    });
 
     ;[distInput,timeMinInput,speedKmhInp].forEach(inp=>{
       inp.addEventListener('keydown', e=>{ if(e.key==='Enter') start(); });
@@ -396,6 +396,37 @@
 
     // Sub trayek calculator
     // calc.js wires itself on load
+  </script>
+
+  <script type="module">
+    import { RallyMasterClock } from './Utils/MasterClock.mjs';
+    const clock = new RallyMasterClock({timeZone:'Asia/Makassar'});
+    const timeNode = document.getElementById('masterClockDisplay');
+    const qualityNode = document.getElementById('masterClockQuality');
+    const endpoint = document.querySelector('meta[name="navipro-master-clock-endpoint"]')?.content?.trim();
+    function paintMasterClock() {
+      const v=clock.snapshot();
+      timeNode.textContent=v.display;
+      qualityNode.textContent=v.quality==='SYNCED'
+        ? 'SYNCED · '+v.sourceId+' · ketidakpastian ±'+v.uncertaintyMs.toFixed(0)+' ms'
+        : v.quality+' · waktu belum terverifikasi';
+      qualityNode.className=v.quality==='SYNCED'?'ok':'warn';
+      requestAnimationFrame(paintMasterClock);
+    }
+    async function syncMasterClock() {
+      if (!endpoint) return;
+      const t0=performance.now();
+      try {
+        const response=await fetch(endpoint,{cache:'no-store',credentials:'include'});
+        const t1=performance.now();
+        if(!response.ok||response.headers.get('X-NaviPRO-Clock-Verified')!=='1')throw new Error('INVALID_CLOCK_RESPONSE');
+        const data=await response.json();
+        clock.sync({...data,clientStartMonoMs:t0,clientEndMonoMs:t1,authenticated:true});
+      }catch(error){ /* remain UNSYNCED or eventually STALE; never claim clock verified */ }
+    }
+    syncMasterClock();
+    setInterval(syncMasterClock,10000);
+    paintMasterClock();
   </script>
 </body>
 </html>
